@@ -1,0 +1,40 @@
+plugins {
+    id 'application'
+    id 'java'
+}
+
+group = 'blackjackclient'
+version = '0.0.1'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.10.1'
+    //implementation 'com.formdev:flatlaf:3.2' // (Optional if GUI needs a nice look)
+}
+
+application {
+    mainClass = 'client.BlackjackClient'  // Default main class
+}
+
+tasks.register('runCLI', JavaExec) {
+    group = 'application'
+    description = 'Run the Blackjack command-line client.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set('client.BlackjackClient')
+}
+
+tasks.register('runGUI', JavaExec) {
+    group = 'application'
+    description = 'Run the Blackjack GUI client.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set('client.BlackjackGUI')
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
