@@ -7,8 +7,8 @@ import java.util.UUID;
 
 public class BlackjackClient {
     private static final String BASE_URL = "http://euclid.knox.edu:8080/api/blackjack";
-    private static final String USERNAME = "jspacco"; // replace with your username
-    private static final String PASSWORD = "12347"; // replace with your from the file posted to Classroom
+    private static final String USERNAME = "jklubbs"; // replace with your username
+    private static final String PASSWORD = "fdde45f"; // replace with your from the file posted to Classroom
 
     public static void main(String[] args) throws Exception {
         ClientConnecter clientConnecter = new ClientConnecter(BASE_URL, USERNAME, PASSWORD);
@@ -68,7 +68,17 @@ public class BlackjackClient {
             System.out.println("Cards remaining: " + state.cardsRemaining);
 
             System.out.print("Enter bet (must be multiple of 10): ");
-            int bet = Integer.parseInt(input.nextLine());
+            int bet;
+            try{
+                bet = Integer.parseInt(input.nextLine());
+                if (bet % 10 != 0) {
+                    System.out.print("Bet was not a multiple of 10, bet set to 10");
+                    bet = 10;
+                }
+            } catch (NumberFormatException e){
+                System.out.print("Bet was not a number, bet set to 10");
+                bet = 10;
+            }
             state = clientConnecter.placeBet(state.sessionId, bet);
             printState(state);
 

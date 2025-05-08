@@ -34,8 +34,8 @@ public class BlackjackGUI extends JFrame {
     
 
     private String BASE_URL = "http://localhost:8080/api/blackjack";
-    private String USERNAME = "jspacco";
-    private String PASSWORD = "12347";
+    private String USERNAME = "jklubbs";
+    private String PASSWORD = "fdde45f";
     private ClientConnecter clientConnecter;
 
     private CardPanel cardPanel;

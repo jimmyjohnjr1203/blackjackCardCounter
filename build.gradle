@@ -19,6 +19,10 @@ application {
     mainClass = 'client.BlackjackClient'  // Default main class
 }
 
+run {
+    standardInput = System.in
+}
+
 tasks.register('runCLI', JavaExec) {
     group = 'application'
     description = 'Run the Blackjack command-line client.'
@@ -31,10 +35,4 @@ tasks.register('runGUI', JavaExec) {
     description = 'Run the Blackjack GUI client.'
     classpath = sourceSets.main.runtimeClasspath
     mainClass.set('client.BlackjackGUI')
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
 }
