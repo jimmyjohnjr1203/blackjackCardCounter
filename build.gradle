@@ -15,13 +15,6 @@ dependencies {
     //implementation 'com.formdev:flatlaf:3.2' // (Optional if GUI needs a nice look)
 }
 
-application {
-    mainClass = 'client.BlackjackClient'  // Default main class
-}
-
-run {
-    standardInput = System.in
-}
 
 tasks.register('runCLI', JavaExec) {
     group = 'application'
@@ -30,9 +23,27 @@ tasks.register('runCLI', JavaExec) {
     mainClass.set('client.BlackjackClient')
 }
 
+tasks.register('runSmartCLI', JavaExec) {
+    group = 'application'
+    description = 'Run the Smart Blackjack command-line client.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set('client.BlackjackSmartClient')
+}
+
 tasks.register('runGUI', JavaExec) {
     group = 'application'
     description = 'Run the Blackjack GUI client.'
     classpath = sourceSets.main.runtimeClasspath
     mainClass.set('client.BlackjackGUI')
+}
+application {
+    mainClass = 'client.BlackjackClient'  // Default main class
+}
+
+run {
+    standardInput = System.in //necessary for command line input with gradle
+}
+
+runSmartCLI {
+    standardInput = System.in //necessary for command line input with gradle
 }
