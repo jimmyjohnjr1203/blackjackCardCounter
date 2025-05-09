@@ -1,5 +1,7 @@
 package client;
 
+import java.security.InvalidParameterException;
+
 public enum Card
 {
     TWO_OF_CLUBS("2C"),
@@ -62,8 +64,10 @@ public enum Card
 
     public static Card fromString(String card) {
         card = card.toUpperCase().replace(' ', '_');
+        //convert text cards recieved from server to internal card representation strings
+        String card_string = wordToValue(card.split("_")[0]) + wordToValue(card.split("_")[2]);
         for (Card c : Card.values()) {
-            if (c.string.equals(card)) {
+            if (c.string.equals(card_string)) {
                 return c;
             }
         }
@@ -76,5 +80,28 @@ public enum Card
 
     public String getFilename() {
         return string + ".png";
+    }
+
+    private static String wordToValue(String word) throws InvalidParameterException {
+        if (word.equals("TWO")) return "2";
+        if (word.equals("THREE")) return "3";
+        if (word.equals("FOUR")) return "4";
+        if (word.equals("FIVE")) return "5";
+        if (word.equals("SIX")) return "6";
+        if (word.equals("SEVEN")) return "7";
+        if (word.equals("EIGHT")) return "8";
+        if (word.equals("NINE")) return "9";
+        if (word.equals("TEN")) return "10";
+        if (word.equals("JACK")) return "J";
+        if (word.equals("QUEEN")) return "Q";
+        if (word.equals("KING")) return "K";
+        if (word.equals("ACE")) return "A";
+        
+        if (word.equals("CLUBS")) return "C";
+        if (word.equals("DIAMONDS")) return "D";
+        if (word.equals("HEARTS")) return "H";
+        if (word.equals("SPADES")) return "S";
+
+        throw new InvalidParameterException("Invalid word provided: "+word+" (should be all caps, name of a card)");
     }
 }

@@ -18,7 +18,7 @@ public class BlackjackSmartClient {
     // x is dealer card, y is player total
     private static final boolean[][] hardStrategy = {
         // 2  ,  3  ,  4  ,  5  ,  6  ,  7  ,  8  ,  9  ,  10 ,  A
-        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //4
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //4 (2 and 2)
         {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //5
         {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //6
         {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //7
@@ -34,10 +34,11 @@ public class BlackjackSmartClient {
         {false,false,false,false,false,false,false,false,false,false}, //17
         {false,false,false,false,false,false,false,false,false,false}, //18
         {false,false,false,false,false,false,false,false,false,false}, //19
-        {false,false,false,false,false,false,false,false,false,false}, //20
+        {false,false,false,false,false,false,false,false,false,false}, //20 (10 and 10)
     };
     private static final boolean[][] softStrategy = {
         // 2  ,  3  ,  4  ,  5  ,  6  ,  7  ,  8  ,  9  ,  10 ,  A
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //12 (Ace and Ace)
         {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //13
         {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //14
         {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //15
@@ -45,7 +46,7 @@ public class BlackjackSmartClient {
         {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //17
         {false,false,false,false,false,false,false,true ,true ,true }, //18
         {false,false,false,false,false,false,false,false,false,false}, //19
-        {false,false,false,false,false,false,false,false,false,false}  //20
+        {false,false,false,false,false,false,false,false,false,false}  //20 (Ace and 9) (Ace and 10 = blackjack, not needed here)
     };
 
     //initialize strategy lists
@@ -56,7 +57,7 @@ public class BlackjackSmartClient {
 
         System.out.println("Welcome to the Smart Blackjack game!");
         System.out.println(
-            "Do you want to start a new session or connect to an old session? \n I will connect to a session and play 50 rounds doing my best to make money");
+            "Do you want to start a new session or connect to an old session? \n I will connect to a session and play 100 rounds doing my best to make money");
 
         // List sessions
         System.out.println("Available sessions:");
@@ -110,7 +111,7 @@ public class BlackjackSmartClient {
 
         int start_balance = state.balance;
 
-        while (round < 50) {
+        while (round < 100) {
             System.out.println("\nYour balance: " + state.balance + " units");
             System.out.println("Cards remaining: " + state.cardsRemaining);
 
@@ -136,11 +137,13 @@ public class BlackjackSmartClient {
                 // String action = input.nextLine().trim().toLowerCase();
 
                 if (shouldIHit(state)) {
+                    System.out.println("I hit!");
                     state = clientConnecter.hit(state.sessionId);
                     if (state.reshuffled) {
                         hasReshuffled = true;
                     }
                 } else {
+                    System.out.println("I stand!");
                     state = clientConnecter.stand(state.sessionId);
                     if (state.reshuffled) {
                         hasReshuffled = true;
@@ -191,7 +194,7 @@ public class BlackjackSmartClient {
         }
     }
 
-    private static boolean shouldIHit(GameState state){ //based on so-called "basic" strategy
+    private static boolean shouldIHit(GameState state){ //returns true if the game state indicates that the player should hit
         
         boolean have_ace = false;
         // check for aces
@@ -207,7 +210,6 @@ public class BlackjackSmartClient {
         //if you have an ace, use soft totals
         
         if (have_ace) {
-            //for first decision
             return getSoftStrategy(dealerCards.get(0), state.playerValue);
         }
         return getHardStrategy(dealerCards.get(0), state.playerValue);
@@ -220,9 +222,9 @@ public class BlackjackSmartClient {
         else if (dealerChar == '1' || dealerChar == 'J' || dealerChar == 'K' || dealerChar == 'Q') dealerIndex = 8;
         else dealerIndex = Integer.valueOf(String.valueOf(dealerChar)) - 2;
 
-        int playerIndex = playerValue - 13;
+        int playerIndex = playerValue - 12;
 
-        return softStrategy[dealerIndex][playerIndex];
+        return softStrategy[playerIndex][dealerIndex];
     }
     
     private static boolean getHardStrategy(Card dealerCard, int playerValue){
@@ -234,14 +236,15 @@ public class BlackjackSmartClient {
 
         int playerIndex = playerValue - 4; //hard strategy starts in a different spot
 
-        return hardStrategy[dealerIndex][playerIndex];
+        return hardStrategy[playerIndex][dealerIndex];
     }
     
-    // convert "THREE OF HEARTS" from server to Card.THREE_OF_HEARTS
+    // convert "THREE OF HEARTS" from server (or list of cards) to Card.THREE_OF_HEARTS
     private static List<Card> getCards(List<String> cardName) {
         List<Card> cards = new LinkedList<>();
-        for (String card: cardName){
-            cards.add(Card.valueOf(card.toUpperCase().replace(' ', '_')));
+        for (String card : cardName){
+            if (card.equals("???")) continue; //skip explicitly unknown cards i.e. second dealer card
+            cards.add(Card.fromString(card));
         }
         return cards;
     }
