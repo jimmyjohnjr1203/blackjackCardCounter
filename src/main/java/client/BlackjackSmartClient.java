@@ -1,6 +1,5 @@
 package client;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -19,7 +18,7 @@ public class BlackjackSmartClient {
     private static final String PASSWORD = "fdde45f"; // replace with your from the file posted to Classroom
 
     // strategies based on https://www.blackjackapprenticeship.com/wp-content/uploads/2018/08/BJA_Basic_Strategy.jpg 
-    // soft means you have an ace
+    // soft means you have an ace counted as 11, if no ace or ace counted as 1, use hard
     // the arrays are flipped so row indices are low for low cards, false = stand and true = hit
     // x is dealer card, y is player total
     private static final boolean[][] hardStrategy = {
@@ -215,27 +214,55 @@ public class BlackjackSmartClient {
         }
     }
 
+    // return whether or not the player should hit based on a player state
     private static boolean shouldIHit(GameState state){ //returns true if the game state indicates that the player should hit
         
-        boolean have_ace = false;
-        // check for aces
-        for (String card : state.playerCards) {
-            if (card.toLowerCase().contains("ace"))
-                have_ace = true;
-        }
-
+        // boolean have_ace = false;
+        // // check for aces
+        // for (String card : state.playerCards) {
+        //     if (card.toLowerCase().contains("ace"))
+        //         have_ace = true;
+        // }
+        //get player card values
+        List<Card> playerCards = getCards(state.playerCards);
         //get dealer card values
         List<Card> dealerCards = getCards(state.dealerCards); //convert dealer cards to actual cards
+
+        boolean softState = false;
+        if (playerCards.contains(Card.ACE_OF_DIAMONDS)
+            || playerCards.contains(Card.ACE_OF_HEARTS)
+            || playerCards.contains(Card.ACE_OF_CLUBS)
+            || playerCards.contains(Card.ACE_OF_SPADES)){
+                //check if the ace is being counted as a 1 or an 11
+                //count as if the ace was an 11 and check if it matches the player value
+                int highValue = 0;
+                for (Card myCard : playerCards){
+                    int card_val;
+                    try {
+                        card_val = Integer.parseInt(myCard.toString().substring(0, 1));
+                    } catch (NumberFormatException e){ //the first char was J, Q, K or A
+                        if (myCard.toString().charAt(0) == 'A')
+                            card_val = 11;
+                        else 
+                            card_val = 10;
+                    }
+                    highValue += card_val;
+                }
+                if (highValue == state.playerValue) //the player value is a soft value
+                    softState = true;
+        } 
+
 
         //strategy based on this: https://www.blackjackapprenticeship.com/wp-content/uploads/2018/08/BJA_Basic_Strategy.jpg
         //if you have an ace, use soft totals
         
-        if (have_ace) {
+        if (softState) {
             return getSoftStrategy(dealerCards.get(0), state.playerValue);
         }
         return getHardStrategy(dealerCards.get(0), state.playerValue);
     }
 
+    // get whether you should hit or stand according to the soft strategy array based on your player value and the dealers shown card
     private static boolean getSoftStrategy(Card dealerCard, int playerValue){
         char dealerChar = dealerCard.toString().charAt(0); //'1' = 10
         int dealerIndex;
@@ -248,6 +275,9 @@ public class BlackjackSmartClient {
         return softStrategy[playerIndex][dealerIndex];
     }
     
+    /*
+    *  get whether you should hit or stand according to the hard strategy array based on your player value and the dealers shown card 
+    */ 
     private static boolean getHardStrategy(Card dealerCard, int playerValue){
         char dealerChar = dealerCard.toString().charAt(0); //'1' = 10
         int dealerIndex;
