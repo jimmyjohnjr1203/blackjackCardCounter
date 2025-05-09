@@ -6,6 +6,13 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFrame;
+import org.jfree.chart.ChartFactory;
+
 
 public class BlackjackSmartClient {
     private static final String BASE_URL = "http://euclid.knox.edu:8080/api/blackjack";
@@ -102,16 +109,21 @@ public class BlackjackSmartClient {
             state = clientConnecter.resumeSession(sessionId);
             
         }
+        //chart stuff
+
+        XYSeries chartData = new XYSeries("Chart", true, false);
         
         //Smart stuff
 
         //keep track of number of 10s, if there are many 
 
-        int round = 0;
+        int round = 1;
 
         int start_balance = state.balance;
 
-        while (round < 100) {
+        chartData.add(0, start_balance);
+
+        while (round <= 100) {
             System.out.println("\nYour balance: " + state.balance + " units");
             System.out.println("Cards remaining: " + state.cardsRemaining);
 
@@ -161,6 +173,8 @@ public class BlackjackSmartClient {
             System.out.println("==> Outcome: " + state.outcome);
             System.out.println("Balance: " + state.balance + " units");
 
+            chartData.add(round, state.balance); //add the rounds info to data
+
             // System.out.print("\nPlay again? yes(y) / no(n): ");
             // String playAgain = input.nextLine().trim().toLowerCase();
             // if (!playAgain.equals("yes") && !playAgain.equals("y")) {
@@ -177,6 +191,16 @@ public class BlackjackSmartClient {
         input.close();
         clientConnecter.finishGame(state.sessionId);
 
+        //put data in dataset
+        XYSeriesCollection chartDataset = new XYSeriesCollection();
+        chartDataset.addSeries(chartData);
+
+        //show chart
+        JFreeChart chartPlot = ChartFactory.createXYLineChart("Balance over Rounds", "Round", "Balance ($)", chartDataset);
+
+        ChartFrame frame = new ChartFrame("Balance over Rounds", chartPlot);
+        frame.pack();
+        frame.setVisible(true); 
     }    
 
     private static void printState(GameState state) {
