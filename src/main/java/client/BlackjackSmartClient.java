@@ -62,7 +62,7 @@ public class BlackjackSmartClient {
 
         System.out.println("Welcome to the Smart Blackjack game!");
         System.out.println(
-            "Do you want to start a new session or connect to an old session? \n I will connect to a session and play 100 rounds doing my best to make money");
+            "Do you want to start a new session or connect to an old session? \nI will connect to a session and play 100 rounds doing my best to make money");
 
         // List sessions
         System.out.println("Available sessions:");
@@ -105,15 +105,15 @@ public class BlackjackSmartClient {
             // Connect to an existing session
             System.out.println("Connecting to session ID: " + sessionId);
             state = clientConnecter.resumeSession(sessionId);
-            
         }
         //chart stuff
 
-        XYSeries chartData = new XYSeries("Chart", true, false);
+        XYSeries chartData = new XYSeries("Round one", true, false);
         
         //Smart stuff
 
-        //keep track of number of 10s, if there are many 
+        int cardCount = 0; //increases or decreases if a deck is more or less favorable to you
+        int defaultBet = 100; //starting at a higher bet gives more precision in smaller bet (because must be a multiple of 10)
 
         int round = 1;
 
@@ -125,26 +125,19 @@ public class BlackjackSmartClient {
             System.out.println("\nYour balance: " + state.balance + " units");
             System.out.println("Cards remaining: " + state.cardsRemaining);
 
-            //System.out.print("Enter bet (must be multiple of 10): ");
-            int bet = 10;
-            // try {
-            //     bet = Integer.parseInt(input.nextLine());
-            //     if (bet % 10 != 0) {
-            //         System.out.print("Bet was not a multiple of 10, bet set to 10");
-            //         bet = 10;
-            //     }
-            // } catch (NumberFormatException e) {
-            //     System.out.print("Bet was not a number, bet set to 10");
-            //     bet = 10;
-            // }
+            int bet = defaultBet + cardCount * 10; //if cardCount is positive, deck is favorable, should use a bigger bet,
+
+            if (bet < 10) bet = 10; //cant have a bet below 10
+
+            // TODO: Change bet by counting cards
+
+
             state = clientConnecter.placeBet(state.sessionId, bet);
             printState(state);
 
             boolean hasReshuffled = false;
             // Player turn loop
             while (!state.gameOver && state.canHit) {
-                // System.out.print("Action hit(h) / stand(s): ");
-                // String action = input.nextLine().trim().toLowerCase();
 
                 if (shouldIHit(state)) {
                     System.out.println("I hit!");
@@ -162,10 +155,20 @@ public class BlackjackSmartClient {
                 printState(state);
                 if (hasReshuffled) {
                     System.out.println("Cards reshuffled!");
+                    //reset card count
+                    cardCount = 0;
                     hasReshuffled = false;
                 } else {
                     System.out.println("Cards not reshuffled.");
                 }
+            }
+            // update the state of the deck (based on all the cards on the table)
+            List<Card> allCards = getCards(state.playerCards);
+            allCards.addAll(getCards(state.dealerCards));
+            for (Card card : allCards){
+                int val = card.getValue(); //assumes 11 for aces
+                if (val <= 6) cardCount += 1;
+                if (val >= 10) cardCount -= 1;
             }
             // System.out.println("Cards remaining: " + state.cardsRemaining);
             System.out.println("==> Outcome: " + state.outcome);
@@ -214,7 +217,9 @@ public class BlackjackSmartClient {
         }
     }
 
-    // return whether or not the player should hit based on a player state
+    /** return whether or not the player should hit based on a player state
+     * 
+     */
     private static boolean shouldIHit(GameState state){ //returns true if the game state indicates that the player should hit
         
         // boolean have_ace = false;
@@ -228,6 +233,7 @@ public class BlackjackSmartClient {
         //get dealer card values
         List<Card> dealerCards = getCards(state.dealerCards); //convert dealer cards to actual cards
 
+        //decide whether the player value is soft/hard (soft means ace is currently counted as 11)
         boolean softState = false;
         if (playerCards.contains(Card.ACE_OF_DIAMONDS)
             || playerCards.contains(Card.ACE_OF_HEARTS)
@@ -237,16 +243,7 @@ public class BlackjackSmartClient {
                 //count as if the ace was an 11 and check if it matches the player value
                 int highValue = 0;
                 for (Card myCard : playerCards){
-                    int card_val;
-                    try {
-                        card_val = Integer.parseInt(myCard.toString().substring(0, 1));
-                    } catch (NumberFormatException e){ //the first char was J, Q, K or A
-                        if (myCard.toString().charAt(0) == 'A')
-                            card_val = 11;
-                        else 
-                            card_val = 10;
-                    }
-                    highValue += card_val;
+                    highValue += myCard.getValue();
                 }
                 if (highValue == state.playerValue) //the player value is a soft value
                     softState = true;
@@ -254,15 +251,17 @@ public class BlackjackSmartClient {
 
 
         //strategy based on this: https://www.blackjackapprenticeship.com/wp-content/uploads/2018/08/BJA_Basic_Strategy.jpg
-        //if you have an ace, use soft totals
         
         if (softState) {
+            System.out.println("This hand is soft!");
             return getSoftStrategy(dealerCards.get(0), state.playerValue);
         }
         return getHardStrategy(dealerCards.get(0), state.playerValue);
     }
 
-    // get whether you should hit or stand according to the soft strategy array based on your player value and the dealers shown card
+    /** 
+     * get whether you should hit or stand according to the soft strategy array based on your player value and the dealers shown card
+     */
     private static boolean getSoftStrategy(Card dealerCard, int playerValue){
         char dealerChar = dealerCard.toString().charAt(0); //'1' = 10
         int dealerIndex;
@@ -275,9 +274,9 @@ public class BlackjackSmartClient {
         return softStrategy[playerIndex][dealerIndex];
     }
     
-    /*
-    *  get whether you should hit or stand according to the hard strategy array based on your player value and the dealers shown card 
-    */ 
+    /**
+     *  get whether you should hit or stand according to the hard strategy array based on your player value and the dealers shown card 
+     */ 
     private static boolean getHardStrategy(Card dealerCard, int playerValue){
         char dealerChar = dealerCard.toString().charAt(0); //'1' = 10
         int dealerIndex;

@@ -82,6 +82,21 @@ public enum Card
         return string + ".png";
     }
 
+    /** return the value of the given card, returns 11 for aces
+     * 
+    */
+    public int getValue(){
+        int card_val;
+        try {
+            card_val = Integer.parseInt(string.substring(0, 1));
+        } catch (NumberFormatException e){ //the first char was J, Q, K or A
+            if (string.charAt(0) == 'A')
+                card_val = 11;
+            else 
+                card_val = 10;
+        }
+        return card_val;
+    }
     private static String wordToValue(String word) throws InvalidParameterException {
         if (word.equals("TWO")) return "2";
         if (word.equals("THREE")) return "3";
