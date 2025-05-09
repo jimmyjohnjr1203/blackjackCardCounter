@@ -124,43 +124,31 @@ public class BlackjackSmartClient {
         while (round <= 100) {
             System.out.println("\nYour balance: " + state.balance + " units");
             System.out.println("Cards remaining: " + state.cardsRemaining);
+            if (state.cardsRemaining == 52){
+                System.out.println("Cards reshuffled!");
+                //reset card count
+                cardCount = 0;
+            }
 
-            int bet = defaultBet + cardCount * 10; //if cardCount is positive, deck is favorable, should use a bigger bet,
+            int bet = defaultBet + (cardCount * 10); //if cardCount is positive, deck is favorable, should use a bigger bet,
 
             if (bet < 10) bet = 10; //cant have a bet below 10
 
-            // TODO: Change bet by counting cards
-
-
             state = clientConnecter.placeBet(state.sessionId, bet);
+            System.out.println("Betting " + bet);
             printState(state);
 
-            boolean hasReshuffled = false;
             // Player turn loop
             while (!state.gameOver && state.canHit) {
 
                 if (shouldIHit(state)) {
                     System.out.println("I hit!");
                     state = clientConnecter.hit(state.sessionId);
-                    if (state.reshuffled) {
-                        hasReshuffled = true;
-                    }
                 } else {
                     System.out.println("I stand!");
                     state = clientConnecter.stand(state.sessionId);
-                    if (state.reshuffled) {
-                        hasReshuffled = true;
-                    }
                 }
                 printState(state);
-                if (hasReshuffled) {
-                    System.out.println("Cards reshuffled!");
-                    //reset card count
-                    cardCount = 0;
-                    hasReshuffled = false;
-                } else {
-                    System.out.println("Cards not reshuffled.");
-                }
             }
             // update the state of the deck (based on all the cards on the table)
             List<Card> allCards = getCards(state.playerCards);
