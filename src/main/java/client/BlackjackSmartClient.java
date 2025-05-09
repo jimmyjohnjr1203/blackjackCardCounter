@@ -1,5 +1,7 @@
 package client;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
@@ -10,6 +12,43 @@ public class BlackjackSmartClient {
     private static final String USERNAME = "jklubbs"; // replace with your username
     private static final String PASSWORD = "fdde45f"; // replace with your from the file posted to Classroom
 
+    // strategies based on https://www.blackjackapprenticeship.com/wp-content/uploads/2018/08/BJA_Basic_Strategy.jpg 
+    // soft means you have an ace
+    // the arrays are flipped so row indices are low for low cards, false = stand and true = hit
+    // x is dealer card, y is player total
+    private static final boolean[][] hardStrategy = {
+        // 2  ,  3  ,  4  ,  5  ,  6  ,  7  ,  8  ,  9  ,  10 ,  A
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //4
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //5
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //6
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //7
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //8
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //9
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //10
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //11
+        {true ,true ,false,false,false,true ,true ,true ,true ,true }, //12
+        {false,false,false,false,false,true ,true ,true ,true ,true }, //13
+        {false,false,false,false,false,true ,true ,true ,true ,true }, //14
+        {false,false,false,false,false,true ,true ,true ,true ,true }, //15
+        {false,false,false,false,false,true ,true ,true ,true ,true }, //16
+        {false,false,false,false,false,false,false,false,false,false}, //17
+        {false,false,false,false,false,false,false,false,false,false}, //18
+        {false,false,false,false,false,false,false,false,false,false}, //19
+        {false,false,false,false,false,false,false,false,false,false}, //20
+    };
+    private static final boolean[][] softStrategy = {
+        // 2  ,  3  ,  4  ,  5  ,  6  ,  7  ,  8  ,  9  ,  10 ,  A
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //13
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //14
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //15
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //16
+        {true ,true ,true ,true ,true ,true ,true ,true ,true ,true }, //17
+        {false,false,false,false,false,false,false,true ,true ,true }, //18
+        {false,false,false,false,false,false,false,false,false,false}, //19
+        {false,false,false,false,false,false,false,false,false,false}  //20
+    };
+
+    //initialize strategy lists
     public static void main(String[] args) throws Exception {
         ClientConnecter clientConnecter = new ClientConnecter(BASE_URL, USERNAME, PASSWORD);
         
@@ -152,7 +191,7 @@ public class BlackjackSmartClient {
         }
     }
 
-    private static boolean shouldIHit(GameState state){
+    private static boolean shouldIHit(GameState state){ //based on so-called "basic" strategy
         
         boolean have_ace = false;
         // check for aces
@@ -160,13 +199,50 @@ public class BlackjackSmartClient {
             if (card.toLowerCase().contains("ace"))
                 have_ace = true;
         }
-        if (have_ace && state.playerValue < 21 && state.dealerValue != null && state.playerValue < state.dealerValue) { // a "soft" value
-            return true;
-        }
-        if (state.playerValue <= 13 && state.dealerValue != null && state.playerValue < state.dealerValue) {
-            return true;
-        }
 
-        return false;
+        //get dealer card values
+        List<Card> dealerCards = getCards(state.dealerCards); //convert dealer cards to actual cards
+
+        //strategy based on this: https://www.blackjackapprenticeship.com/wp-content/uploads/2018/08/BJA_Basic_Strategy.jpg
+        //if you have an ace, use soft totals
+        
+        if (have_ace) {
+            //for first decision
+            return getSoftStrategy(dealerCards.get(0), state.playerValue);
+        }
+        return getHardStrategy(dealerCards.get(0), state.playerValue);
+    }
+
+    private static boolean getSoftStrategy(Card dealerCard, int playerValue){
+        char dealerChar = dealerCard.toString().charAt(0); //'1' = 10
+        int dealerIndex;
+        if (dealerChar == 'A') dealerIndex = 9; //last column
+        else if (dealerChar == '1' || dealerChar == 'J' || dealerChar == 'K' || dealerChar == 'Q') dealerIndex = 8;
+        else dealerIndex = Integer.valueOf(String.valueOf(dealerChar)) - 2;
+
+        int playerIndex = playerValue - 13;
+
+        return softStrategy[dealerIndex][playerIndex];
+    }
+    
+    private static boolean getHardStrategy(Card dealerCard, int playerValue){
+        char dealerChar = dealerCard.toString().charAt(0); //'1' = 10
+        int dealerIndex;
+        if (dealerChar == 'A') dealerIndex = 9; //last column
+        else if (dealerChar == '1' || dealerChar == 'J' || dealerChar == 'K' || dealerChar == 'Q') dealerIndex = 8;
+        else dealerIndex = Integer.valueOf(String.valueOf(dealerChar)) - 2;
+
+        int playerIndex = playerValue - 4; //hard strategy starts in a different spot
+
+        return hardStrategy[dealerIndex][playerIndex];
+    }
+    
+    // convert "THREE OF HEARTS" from server to Card.THREE_OF_HEARTS
+    private static List<Card> getCards(List<String> cardName) {
+        List<Card> cards = new LinkedList<>();
+        for (String card: cardName){
+            cards.add(Card.valueOf(card.toUpperCase().replace(' ', '_')));
+        }
+        return cards;
     }
 }
