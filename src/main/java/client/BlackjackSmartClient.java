@@ -108,18 +108,20 @@ public class BlackjackSmartClient {
         }
         //chart stuff
 
-        XYSeries chartData = new XYSeries("Round one", true, false);
+        XYSeries balanceData = new XYSeries("Balance", true, false);
+        XYSeries bettingtData = new XYSeries("Bets", true, false);
         
         //Smart stuff
 
         int cardCount = 0; //increases or decreases if a deck is more or less favorable to you
-        int defaultBet = 100; //starting at a higher bet gives more precision in smaller bet (because must be a multiple of 10)
+        int defaultBet = 10; 
 
         int round = 1;
 
         int start_balance = state.balance;
 
-        chartData.add(0, start_balance);
+        balanceData.add(0, start_balance);
+        bettingtData.add(0, defaultBet);
 
         while (round <= 100) {
             System.out.println("\nYour balance: " + state.balance + " units");
@@ -130,12 +132,15 @@ public class BlackjackSmartClient {
                 cardCount = 0;
             }
 
-            int bet = defaultBet + (cardCount * 10); //if cardCount is positive, deck is favorable, should use a bigger bet,
-
-            if (bet < 10) bet = 10; //cant have a bet below 10
+            //int bet = defaultBet + (cardCount * 20); //if cardCount is positive, deck is favorable, should use a bigger bet,
+            int bet;
+            if (cardCount <= 0) bet = 10; //if the deck is not favorable, bet the minimum
+            else bet = 10 + (cardCount/2) * 10; //if the deck is favorable, increase depending on how favorable, (half as much, integer division makes it ok)
 
             state = clientConnecter.placeBet(state.sessionId, bet);
-            System.out.println("Betting " + bet);
+            System.out.println("Bet: " + bet);
+            //keep track of betting data for graph for debugging
+            bettingtData.add(round, bet);
             printState(state);
 
             // Player turn loop
@@ -150,25 +155,20 @@ public class BlackjackSmartClient {
                 }
                 printState(state);
             }
-            // update the state of the deck (based on all the cards on the table)
+            // update the state of the deck after the round (based on all the cards on the table)
             List<Card> allCards = getCards(state.playerCards);
-            allCards.addAll(getCards(state.dealerCards));
+            allCards.addAll(getCards(state.dealerCards)); //so I dont need 2 for loops
             for (Card card : allCards){
                 int val = card.getValue(); //assumes 11 for aces
-                if (val <= 6) cardCount += 1;
+                if (val <= 5) cardCount += 1;
                 if (val >= 10) cardCount -= 1;
             }
             // System.out.println("Cards remaining: " + state.cardsRemaining);
             System.out.println("==> Outcome: " + state.outcome);
             System.out.println("Balance: " + state.balance + " units");
 
-            chartData.add(round, state.balance); //add the rounds info to data
+            balanceData.add(round, state.balance); //add the rounds info to data
 
-            // System.out.print("\nPlay again? yes(y) / no(n): ");
-            // String playAgain = input.nextLine().trim().toLowerCase();
-            // if (!playAgain.equals("yes") && !playAgain.equals("y")) {
-            //     break;
-            // }
             state = clientConnecter.newGame(state.sessionId);
             round++;
         }
@@ -182,7 +182,8 @@ public class BlackjackSmartClient {
 
         //put data in dataset and chart
         XYSeriesCollection chartDataset = new XYSeriesCollection();
-        chartDataset.addSeries(chartData);
+        chartDataset.addSeries(balanceData);
+        chartDataset.addSeries(bettingtData);
         JFreeChart chartPlot = ChartFactory.createXYLineChart("Balance over Rounds", "Round", "Balance ($)", chartDataset);
         //show chart
         ChartFrame frame = new ChartFrame("Balance over Rounds", chartPlot);
@@ -210,12 +211,6 @@ public class BlackjackSmartClient {
      */
     private static boolean shouldIHit(GameState state){ //returns true if the game state indicates that the player should hit
         
-        // boolean have_ace = false;
-        // // check for aces
-        // for (String card : state.playerCards) {
-        //     if (card.toLowerCase().contains("ace"))
-        //         have_ace = true;
-        // }
         //get player card values
         List<Card> playerCards = getCards(state.playerCards);
         //get dealer card values
