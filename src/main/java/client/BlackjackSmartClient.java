@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.chart.JFreeChart;
@@ -191,13 +190,11 @@ public class BlackjackSmartClient {
         input.close();
         clientConnecter.finishGame(state.sessionId);
 
-        //put data in dataset
+        //put data in dataset and chart
         XYSeriesCollection chartDataset = new XYSeriesCollection();
         chartDataset.addSeries(chartData);
-
-        //show chart
         JFreeChart chartPlot = ChartFactory.createXYLineChart("Balance over Rounds", "Round", "Balance ($)", chartDataset);
-
+        //show chart
         ChartFrame frame = new ChartFrame("Balance over Rounds", chartPlot);
         frame.pack();
         frame.setVisible(true); 

@@ -11,7 +11,7 @@
       "java.configuration.updateBuildConfiguration": "interactive",
       "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "C:/Users/jackl/.gradle/caches/modules-2/files-2.1"
+        "C:/Users/jackl/.gradle/caches/modules-2/files-2.1/**/*.jar"
       ],
       "java.project.sourcePaths": [
         "src/main/java"
