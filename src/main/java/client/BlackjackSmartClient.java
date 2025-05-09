@@ -122,6 +122,19 @@ public class BlackjackSmartClient {
 
         balanceData.add(0, start_balance);
         bettingtData.add(0, defaultBet);
+        
+        //put data in dataset and chart, should update as the rounds progress
+        XYSeriesCollection chartDataset = new XYSeriesCollection();
+        chartDataset.addSeries(balanceData);
+        chartDataset.addSeries(bettingtData);
+        JFreeChart chartPlot = ChartFactory.createXYLineChart("Balance over Rounds", "Round", "Balance ($)", chartDataset);
+        //show chart
+        ChartFrame frame = new ChartFrame("Balance over Rounds", chartPlot);
+        frame.pack();
+        frame.setVisible(true); 
+        frame.toFront();
+        frame.requestFocus();
+        frame.setAlwaysOnTop(true);
 
         while (round <= 100) {
             System.out.println("\nYour balance: " + state.balance + " units");
@@ -160,8 +173,8 @@ public class BlackjackSmartClient {
             allCards.addAll(getCards(state.dealerCards)); //so I dont need 2 for loops
             for (Card card : allCards){
                 int val = card.getValue(); //assumes 11 for aces
-                if (val <= 5) cardCount += 1;
-                if (val >= 10) cardCount -= 1;
+                if (val <= 6) cardCount += 1;
+                else if (val >= 10) cardCount -= 1;
             }
             // System.out.println("Cards remaining: " + state.cardsRemaining);
             System.out.println("==> Outcome: " + state.outcome);
@@ -177,18 +190,10 @@ public class BlackjackSmartClient {
         System.out.println("Final value: "+state.balance);
         System.out.println("Difference: "+(state.balance-start_balance));
         System.out.println("Thanks for playing!");
+        frame.setAlwaysOnTop(false); //stay on top until the data is done being collected
         input.close();
         clientConnecter.finishGame(state.sessionId);
 
-        //put data in dataset and chart
-        XYSeriesCollection chartDataset = new XYSeriesCollection();
-        chartDataset.addSeries(balanceData);
-        chartDataset.addSeries(bettingtData);
-        JFreeChart chartPlot = ChartFactory.createXYLineChart("Balance over Rounds", "Round", "Balance ($)", chartDataset);
-        //show chart
-        ChartFrame frame = new ChartFrame("Balance over Rounds", chartPlot);
-        frame.pack();
-        frame.setVisible(true); 
     }    
 
     private static void printState(GameState state) {
