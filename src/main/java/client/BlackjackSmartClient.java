@@ -109,7 +109,9 @@ public class BlackjackSmartClient {
         //chart stuff
 
         XYSeries balanceData = new XYSeries("Balance", true, false);
-        XYSeries bettingtData = new XYSeries("Bets", true, false);
+        XYSeries balanceWoCountData = new XYSeries("Balance without card counting", true, false); 
+        //simulating balance if you didnt use card counting i.e. same bet every time
+        XYSeries bettingData = new XYSeries("Bets", true, false);
         
         //Smart stuff
 
@@ -120,13 +122,15 @@ public class BlackjackSmartClient {
 
         int start_balance = state.balance;
 
+        balanceWoCountData.add(0, start_balance);
         balanceData.add(0, start_balance);
-        bettingtData.add(0, defaultBet);
+        bettingData.add(0, defaultBet);
         
         //put data in dataset and chart, should update as the rounds progress
         XYSeriesCollection chartDataset = new XYSeriesCollection();
         chartDataset.addSeries(balanceData);
-        chartDataset.addSeries(bettingtData);
+        chartDataset.addSeries(bettingData);
+        chartDataset.addSeries(balanceWoCountData);
         JFreeChart chartPlot = ChartFactory.createXYLineChart("Balance over Rounds", "Round", "Balance ($)", chartDataset);
         //show chart
         ChartFrame frame = new ChartFrame("Balance over Rounds", chartPlot);
@@ -134,7 +138,12 @@ public class BlackjackSmartClient {
         frame.setVisible(true); 
         frame.toFront();
         frame.requestFocus();
+        //make it actually go on top
         frame.setAlwaysOnTop(true);
+        frame.setAlwaysOnTop(false);
+
+        //keep track of what balance would have been if you were not using card counting
+        int balanceWoCount = start_balance;
 
         while (round <= 100) {
             System.out.println("\nYour balance: " + state.balance + " units");
@@ -153,7 +162,7 @@ public class BlackjackSmartClient {
             state = clientConnecter.placeBet(state.sessionId, bet);
             System.out.println("Bet: " + bet);
             //keep track of betting data for graph for debugging
-            bettingtData.add(round, bet);
+            bettingData.add(round, bet);
             printState(state);
 
             // Player turn loop
@@ -180,7 +189,20 @@ public class BlackjackSmartClient {
             System.out.println("==> Outcome: " + state.outcome);
             System.out.println("Balance: " + state.balance + " units");
 
+            //update balance without card counting, always assume default bet
+            if (state.outcome == null){ //state.outcome is null on blackjack for some reason?
+                //player blackjack
+                balanceWoCount += defaultBet*1.5;
+            } else if (state.outcome.equals("DEALER_WINS")){
+                balanceWoCount -= defaultBet;
+            } else if (state.outcome.equals("PLAYER_WINS")){
+                balanceWoCount += defaultBet;
+            } else {
+                //push, do nothing
+            }
+
             balanceData.add(round, state.balance); //add the rounds info to data
+            balanceWoCountData.add(round, balanceWoCount); //add the rounds info to data
 
             state = clientConnecter.newGame(state.sessionId);
             round++;
