@@ -62,7 +62,7 @@ public class BlackjackSmartClient {
 
         System.out.println("Welcome to the Smart Blackjack game!");
         System.out.println(
-            "Do you want to start a new session or connect to an old session? \nI will connect to a session and play 100 rounds doing my best to make money");
+            "Do you want to start a new session or connect to an old session? \nI will connect to a session and play 500 rounds doing my best to make money");
 
         // List sessions
         System.out.println("Available sessions:");
@@ -151,8 +151,9 @@ public class BlackjackSmartClient {
         int playerBlackjack = 0;
         int push = 0;
 
-        while (round <= 100) {
-            System.out.println("\nYour balance: " + state.balance + " units");
+        while (round <= 500) {
+            //System.out.println("\nYour balance: " + state.balance + " units");
+            System.out.println("Playing Round "+round);
             System.out.println("Cards remaining: " + state.cardsRemaining);
             if (state.cardsRemaining == 52){
                 System.out.println("Cards reshuffled!");
@@ -163,7 +164,7 @@ public class BlackjackSmartClient {
             //int bet = defaultBet + (cardCount * 20); //if cardCount is positive, deck is favorable, should use a bigger bet,
             int bet;
             if (cardCount <= 0) bet = 10; //if the deck is not favorable, bet the minimum
-            else bet = 10 + (cardCount/2) * 10; //if the deck is favorable, increase depending on how favorable, (half as much, integer division makes it ok)
+            else bet = 10 + (cardCount/3) * 10; //if the deck is favorable, increase depending on how favorable, (half as much, integer division makes it ok)
 
             state = clientConnecter.placeBet(state.sessionId, bet);
             System.out.println("Bet: " + bet);
@@ -183,6 +184,7 @@ public class BlackjackSmartClient {
                 }
                 printState(state);
             }
+
             // update the state of the deck after the round (based on all the cards on the table, HI-Opt II system)
             List<Card> allCards = getCards(state.playerCards);
             allCards.addAll(getCards(state.dealerCards)); //so I dont need 2 for loops
@@ -191,7 +193,7 @@ public class BlackjackSmartClient {
                 if (val == 4 || val == 5) cardCount += 2;
                 else if (val <= 7) cardCount += 1;
                 else if (val == 10) cardCount -= 2;
-                //do nothing for aces
+                //else cardCount -= 1;
             }
             System.out.println("==> Outcome: " + state.outcome);
             System.out.println("Balance: " + state.balance + " units");
@@ -219,16 +221,15 @@ public class BlackjackSmartClient {
             round++;
         }
 
+        System.out.println("Player Wins: "+playerWins);
+        System.out.println("Player Blackjacks: "+playerBlackjack);
+        System.out.println("Pushes: "+push);
+        System.out.println("Dealer Wins: "+dealerWins);
         System.out.println("Original value: "+start_balance);
         System.out.println("Final value: "+state.balance);
         System.out.println("Difference: "+(state.balance-start_balance));
-        System.out.println("Player Wins: "+playerBlackjack);
-        System.out.println("Player Blackjacks: "+playerWins);
-        System.out.println("Pushes: "+push);
-        System.out.println("Dealer Wins: "+dealerWins);
         
         System.out.println("Thanks for playing!");
-        frame.setAlwaysOnTop(false); //stay on top until the data is done being collected
         input.close();
         clientConnecter.finishGame(state.sessionId);
 
