@@ -145,6 +145,12 @@ public class BlackjackSmartClient {
         //keep track of what balance would have been if you were not using card counting
         int balanceWoCount = start_balance;
 
+        //keep track of win/loss stats
+        int playerWins = 0;
+        int dealerWins = 0;
+        int playerBlackjack = 0;
+        int push = 0;
+
         while (round <= 100) {
             System.out.println("\nYour balance: " + state.balance + " units");
             System.out.println("Cards remaining: " + state.cardsRemaining);
@@ -168,7 +174,7 @@ public class BlackjackSmartClient {
             // Player turn loop
             while (!state.gameOver && state.canHit) {
 
-                if (shouldIHit(state)) {
+                if (shouldIHit(state, cardCount)) {
                     System.out.println("I hit!");
                     state = clientConnecter.hit(state.sessionId);
                 } else {
@@ -177,28 +183,33 @@ public class BlackjackSmartClient {
                 }
                 printState(state);
             }
-            // update the state of the deck after the round (based on all the cards on the table)
+            // update the state of the deck after the round (based on all the cards on the table, HI-Opt II system)
             List<Card> allCards = getCards(state.playerCards);
             allCards.addAll(getCards(state.dealerCards)); //so I dont need 2 for loops
             for (Card card : allCards){
                 int val = card.getValue(); //assumes 11 for aces
-                if (val <= 6) cardCount += 1;
-                else if (val >= 10) cardCount -= 1;
+                if (val == 4 || val == 5) cardCount += 2;
+                else if (val <= 7) cardCount += 1;
+                else if (val == 10) cardCount -= 2;
+                //do nothing for aces
             }
-            // System.out.println("Cards remaining: " + state.cardsRemaining);
             System.out.println("==> Outcome: " + state.outcome);
             System.out.println("Balance: " + state.balance + " units");
 
-            //update balance without card counting, always assume default bet
+            //update balance without card counting, always assume default bet, also update stats
             if (state.outcome == null){ //state.outcome is null on blackjack for some reason?
                 //player blackjack
                 balanceWoCount += defaultBet*1.5;
+                playerBlackjack++;
+                playerWins++;
             } else if (state.outcome.equals("DEALER_WINS")){
                 balanceWoCount -= defaultBet;
+                dealerWins++;
             } else if (state.outcome.equals("PLAYER_WINS")){
                 balanceWoCount += defaultBet;
+                playerWins++;
             } else {
-                //push, do nothing
+                push++;
             }
 
             balanceData.add(round, state.balance); //add the rounds info to data
@@ -211,6 +222,11 @@ public class BlackjackSmartClient {
         System.out.println("Original value: "+start_balance);
         System.out.println("Final value: "+state.balance);
         System.out.println("Difference: "+(state.balance-start_balance));
+        System.out.println("Player Wins: "+playerBlackjack);
+        System.out.println("Player Blackjacks: "+playerWins);
+        System.out.println("Pushes: "+push);
+        System.out.println("Dealer Wins: "+dealerWins);
+        
         System.out.println("Thanks for playing!");
         frame.setAlwaysOnTop(false); //stay on top until the data is done being collected
         input.close();
@@ -236,7 +252,7 @@ public class BlackjackSmartClient {
     /** return whether or not the player should hit based on a player state
      * 
      */
-    private static boolean shouldIHit(GameState state){ //returns true if the game state indicates that the player should hit
+    private static boolean shouldIHit(GameState state, int cardCount){ //returns true if the game state indicates that the player should hit
         
         //get player card values
         List<Card> playerCards = getCards(state.playerCards);
@@ -259,12 +275,39 @@ public class BlackjackSmartClient {
                     softState = true;
         } 
 
+        int dealerValue = dealerCards.get(0).getValue();
+
 
         //strategy based on this: https://www.blackjackapprenticeship.com/wp-content/uploads/2018/08/BJA_Basic_Strategy.jpg
         
         if (softState) {
             System.out.println("This hand is soft!");
             return getSoftStrategy(dealerCards.get(0), state.playerValue);
+        }
+        //hard strategy deviations
+        if (cardCount >= 0 && (state.playerValue == 16 || state.playerValue == 15) && (dealerValue == 10)){
+            return false;
+        }
+        if (cardCount >= 4 && (state.playerValue == 16) && dealerValue == 9){
+            return false;
+        }
+        if (cardCount >= 3 && (state.playerValue == 15) && dealerValue == 9){
+            return false;
+        }
+        if (cardCount >= 1 && (state.playerValue == 15) && dealerValue == 11){
+            return false;
+        }
+        if (cardCount >= 5 && (state.playerValue == 14) && dealerValue == 10){
+            return false;
+        }
+        if (cardCount <= 0 && (state.playerValue == 13) && dealerValue == 2){
+            return true;
+        }
+        if (cardCount >= 3 && (state.playerValue == 12) && dealerValue == 2){
+            return false;
+        }
+        if (cardCount >= 2 && (state.playerValue == 12) && dealerValue == 3){
+            return false;
         }
         return getHardStrategy(dealerCards.get(0), state.playerValue);
     }
