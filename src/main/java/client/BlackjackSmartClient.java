@@ -62,50 +62,50 @@ public class BlackjackSmartClient {
 
         System.out.println("Welcome to the Smart Blackjack game!");
         System.out.println(
-            "Do you want to start a new session or connect to an old session? \nI will connect to a session and play 500 rounds doing my best to make money");
+            "I will connect to a new session and play 500 rounds doing my best to make money");
 
-        // List sessions
-        System.out.println("Available sessions:");
-        List<SessionSummary> sessions = clientConnecter.listSessions();
-        int sessionNum = 1;
-        for (SessionSummary session : sessions) {
-            System.out.println("session number: " + sessionNum + " with Session ID: " + session.sessionId + ", Balance: " + session.balance);
-            sessionNum++;
-        }
-        System.out.println("Enter session ID to connect to an old session or 'new' for a new session:");
-        String sessionIdInput = input.nextLine().trim();
+        // // List sessions
+        // System.out.println("Available sessions:");
+        // List<SessionSummary> sessions = clientConnecter.listSessions();
+        // int sessionNum = 1;
+        // for (SessionSummary session : sessions) {
+        //     System.out.println("session number: " + sessionNum + " with Session ID: " + session.sessionId + ", Balance: " + session.balance);
+        //     sessionNum++;
+        // }
+        // System.out.println("Enter session ID to connect to an old session or 'new' for a new session:");
+        // String sessionIdInput = input.nextLine().trim();
         UUID sessionId = null;
         GameState state = null;
         
-        if (sessionIdInput.equalsIgnoreCase("new")) {
-            // Start a new session
-            System.out.println("A new session! Great idea.");
-        } else if (sessionIdInput.matches("\\d+")) {
-            // If the input is a number, treat it as an index
-            int sessionIndex = Integer.parseInt(sessionIdInput) - 1;
-            if (sessionIndex >= 0 && sessionIndex < sessions.size()) {
-                sessionId = sessions.get(sessionIndex).sessionId;
-                System.out.println("Connecting to session ID: " + sessionId);
-            } else {
-                System.out.println("Invalid session number. Starting a new session.");
-            }
-        } else {
-            try {
-                sessionId = UUID.fromString(sessionIdInput);
-                System.out.println("Connecting to session ID: " + sessionId);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid session ID. Starting a new session.");
-            }
-        }
+        // if (sessionIdInput.equalsIgnoreCase("new")) {
+        //     // Start a new session
+        //     System.out.println("A new session! Great idea.");
+        // } else if (sessionIdInput.matches("\\d+")) {
+        //     // If the input is a number, treat it as an index
+        //     int sessionIndex = Integer.parseInt(sessionIdInput) - 1;
+        //     if (sessionIndex >= 0 && sessionIndex < sessions.size()) {
+        //         sessionId = sessions.get(sessionIndex).sessionId;
+        //         System.out.println("Connecting to session ID: " + sessionId);
+        //     } else {
+        //         System.out.println("Invalid session number. Starting a new session.");
+        //     }
+        // } else {
+        //     try {
+        //         sessionId = UUID.fromString(sessionIdInput);
+        //         System.out.println("Connecting to session ID: " + sessionId);
+        //     } catch (IllegalArgumentException e) {
+        //         System.out.println("Invalid session ID. Starting a new session.");
+        //     }
+        // }
         if (sessionId == null) {
             // Start a new session
             System.out.println("Starting a new session...");
             state = clientConnecter.startGame();
-        } else {
-            // Connect to an existing session
-            System.out.println("Connecting to session ID: " + sessionId);
-            state = clientConnecter.resumeSession(sessionId);
-        }
+        } // else {
+        //     // Connect to an existing session
+        //     System.out.println("Connecting to session ID: " + sessionId);
+        //     state = clientConnecter.resumeSession(sessionId);
+        // }
         //chart stuff
 
         XYSeries balanceData = new XYSeries("Balance", true, false);
