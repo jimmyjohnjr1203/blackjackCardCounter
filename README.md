@@ -54,3 +54,9 @@ The file `ClientConnector.java` handles all of the
 communication with the server. It converts the JSON
 response into an instance of the `GameState` class.
 
+
+## Smart Blackjack Client
+
+Run with gradle 
+Will run 500 rounds showing bets over rounds, balance over rounds, and your balance over rounds if you weren't using card counting
+Card counting is unfortunately not very effective :(

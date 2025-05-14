@@ -116,7 +116,7 @@ public class BlackjackSmartClient {
         //Smart stuff
 
         int cardCount = 0; //increases or decreases if a deck is more or less favorable to you
-        int defaultBet = 10; 
+        int defaultBet = 50; 
 
         int round = 1;
 
@@ -163,8 +163,9 @@ public class BlackjackSmartClient {
 
             //int bet = defaultBet + (cardCount * 20); //if cardCount is positive, deck is favorable, should use a bigger bet,
             int bet;
-            if (cardCount <= 0) bet = 10; //if the deck is not favorable, bet the minimum
-            else bet = 10 + (cardCount/3) * 10; //if the deck is favorable, increase depending on how favorable, (half as much, integer division makes it ok)
+            // if (cardCount <= 0) bet = defaultBet; //if the deck is not favorable, bet the minimum
+            // else 
+            bet = defaultBet + (cardCount/2) * 10; //if the deck is favorable, increase depending on how favorable, (half as much, integer division makes it ok)
 
             state = clientConnecter.placeBet(state.sessionId, bet);
             System.out.println("Bet: " + bet);
@@ -199,7 +200,7 @@ public class BlackjackSmartClient {
             System.out.println("Balance: " + state.balance + " units");
 
             //update balance without card counting, always assume default bet, also update stats
-            if (state.outcome == null){ //state.outcome is null on blackjack for some reason?
+            if (state.outcome == null || state.outcome.equals("PLAYER_BLACKJACK")){ //state.outcome is null on blackjack for some reason?
                 //player blackjack
                 balanceWoCount += defaultBet*1.5;
                 playerBlackjack++;
