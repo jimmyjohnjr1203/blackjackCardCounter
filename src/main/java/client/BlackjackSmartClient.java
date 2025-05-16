@@ -164,7 +164,7 @@ public class BlackjackSmartClient {
             //int bet = defaultBet + (cardCount * 20); //if cardCount is positive, deck is favorable, should use a bigger bet,
             int bet;
             if (cardCount <= 0) bet = defaultBet; //if the deck is not favorable, bet the minimum
-            else bet = defaultBet + (cardCount) * 50; //if the deck is favorable, increase depending on how favorable, (half as much, integer division makes it ok)
+            else bet = defaultBet + (cardCount) * 10; //if the deck is favorable, increase depending on how favorable, (half as much, integer division makes it ok)
             if (bet > 1000) bet = 1000;
             state = clientConnecter.placeBet(state.sessionId, bet);
             System.out.println("Bet: " + bet);
